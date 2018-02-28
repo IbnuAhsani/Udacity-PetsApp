@@ -14,12 +14,13 @@ public class PetContract {
         {
              /* Defining the name of the Column Heading of the Table */
             public static final String _ID = BaseColumns._ID;
-            public static final String TABLE_PET_NAME = "pet";
+            public static final String TABLE_PET_NAME = "pets";
             public static final String COLUMN_PET_NAME = "name";
             public static final String COLUMN_PET_BREED = "breed";
             public static final String COLUMN_PET_GENDER = "gender";
             public static final String COLUMN_PET_WEIGHT = "weight";
 
+            /* Defining the keywords that are going to be used for Querying */
             public static final String TEXT_TYPE = "TEXT";
             public static final String INTEGER_TYPE = "INTEGER";
             public static final String PRIMARY_KEY = "PRIMARY KEY";

@@ -12,17 +12,25 @@ import com.example.android.pets.data.PetContract.PetsEntry;
 
 public class PetDbHelper extends SQLiteOpenHelper {
 
+    /* Defining the name of the DB */
     public static final String DATABASE_NAME = "shelter.db";
+
+    /* Defining the version of the DB */
     public static final int DATABASE_VERSION = 1;
+
+    /* The Query statement to CREATE the pets Table */
     public static final String SQL_CREATE_PETS_TABLE=
             "CREATE TABLE " + PetsEntry.TABLE_PET_NAME + " (" +
             PetsEntry._ID + " " + PetsEntry.INTEGER_TYPE + " " + PetsEntry.PRIMARY_KEY + " " + PetsEntry.NOT_NULL + ", " +
-            PetsEntry.COLUMN_PET_NAME + "" + PetsEntry.TEXT_TYPE + " " + PetsEntry.NOT_NULL + ", " +
+            PetsEntry.COLUMN_PET_NAME + " " + PetsEntry.TEXT_TYPE + " " + PetsEntry.NOT_NULL + ", " +
             PetsEntry.COLUMN_PET_BREED + " " + PetsEntry.TEXT_TYPE + ", " +
             PetsEntry.COLUMN_PET_GENDER + " " + PetsEntry.INTEGER_TYPE + " " + PetsEntry.INTEGER_TYPE + " " + PetsEntry.NOT_NULL + ", " +
             PetsEntry.COLUMN_PET_WEIGHT + " " + PetsEntry.INTEGER_TYPE + " " + PetsEntry.NOT_NULL + " DEFAULT 0);";
-    public static final String SQL_DELETE_ENTRIES = "DROP TABLE IF EXISTS " + PetsEntry.TABLE_PET_NAME;
 
+    /* The Query statemnt to DELETE the pets Table if it already exists */
+    public static final String SQL_DELETE_PETS_TABLE = "DROP TABLE IF EXISTS " + PetsEntry.TABLE_PET_NAME;
+
+    /* The constructor for the PetDbHelper class */
     public PetDbHelper(Context context)
         {
             super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -36,6 +44,7 @@ public class PetDbHelper extends SQLiteOpenHelper {
      */
     @Override
     public void onCreate(SQLiteDatabase db) {
+        // Create the pets Table if it doesn't already exists
         db.execSQL(SQL_CREATE_PETS_TABLE);
     }
 

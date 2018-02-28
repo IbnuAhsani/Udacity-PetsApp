@@ -15,18 +15,21 @@
  */
 package com.example.android.pets;
 
+import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 
-import com.example.android.pets.data.PetContract;
+import com.example.android.pets.data.PetContract.PetsEntry;
 import com.example.android.pets.data.PetDbHelper;
 
 /**
@@ -34,10 +37,18 @@ import com.example.android.pets.data.PetDbHelper;
  */
 public class CatalogActivity extends AppCompatActivity {
 
+    /* Database helper that will provide us access to the database */
+    PetDbHelper mDbHelper;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_catalog);
+
+
+         // To access our database, we instantiate our subclass of SQLiteOpenHelper
+        // and pass the context, which is the current activity.
+        mDbHelper = new PetDbHelper(CatalogActivity.this);
 
         // Setup FAB to open EditorActivity
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
@@ -51,7 +62,6 @@ public class CatalogActivity extends AppCompatActivity {
 
         displayDatabaseInfo();
     }
-
 
     /**
      * Temporary helper method to display information in the onscreen TextView about the state of
@@ -67,7 +77,7 @@ public class CatalogActivity extends AppCompatActivity {
 
         // Perform this raw SQL query "SELECT * FROM pets"
         // to get a Cursor that contains all rows from the pets table.
-        Cursor cursor = db.rawQuery("SELECT * FROM " + PetContract.PetsEntry.TABLE_PET_NAME, null);
+        Cursor cursor = db.rawQuery("SELECT * FROM " + PetsEntry.TABLE_PET_NAME, null);
         try {
             // Display the number of rows in the Cursor (which reflects the number of rows in the
             // pets table in the database).
@@ -88,14 +98,46 @@ public class CatalogActivity extends AppCompatActivity {
         return true;
     }
 
+     /**
+    * Helper method to insert hardcoded pet data into the database. For debugging purposes only.
+    */
+    private void insertPet()
+        {
+            // Gets the database in write mode
+            SQLiteDatabase db = mDbHelper.getWritableDatabase();
+
+            // Create a ContentValues object where column names are the keys,
+            // and Toto's pet attributes are the values.
+            ContentValues values = new ContentValues();
+            values.put(PetsEntry.COLUMN_PET_NAME, "Toto");
+            values.put(PetsEntry.COLUMN_PET_BREED, "Terrier");
+            values.put(PetsEntry.COLUMN_PET_GENDER, PetsEntry.GENDER_MALE);
+            values.put(PetsEntry.COLUMN_PET_WEIGHT, 7);
+
+
+            // Insert a new row for Toto in the database, returning the ID of that new row.
+            // The first argument for db.insert() is the pets table name.
+            // The second argument provides the name of a column in which the framework
+            // can insert NULL in the event that the ContentValues is empty (if
+            // this is set to "null", then the framework will not insert a row when
+            // there are no values).
+            // The third argument is the ContentValues object containing the info for Toto.
+            long newRowId = db.insert(PetsEntry.TABLE_PET_NAME, null, values);
+
+            // Log message to show the ID of the newly inserted row
+            Log.v("CatalogActivity", "New Row Id: " + newRowId);
+        }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // User clicked on a menu option in the app bar overflow menu
         switch (item.getItemId()) {
             // Respond to a click on the "Insert dummy data" menu option
             case R.id.action_insert_dummy_data:
-                // Do nothing for now
+                insertPet();
+                displayDatabaseInfo();
                 return true;
+
             // Respond to a click on the "Delete all entries" menu option
             case R.id.action_delete_all_entries:
                 // Do nothing for now

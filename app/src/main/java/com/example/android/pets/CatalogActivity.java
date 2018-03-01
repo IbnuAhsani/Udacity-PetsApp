@@ -16,6 +16,7 @@
 package com.example.android.pets;
 
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -28,6 +29,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.android.pets.data.PetContract.PetsEntry;
 import com.example.android.pets.data.PetDbHelper;
@@ -37,16 +39,18 @@ import com.example.android.pets.data.PetDbHelper;
  */
 public class CatalogActivity extends AppCompatActivity {
 
-    /* Database helper that will provide us access to the database */
+    /* Database Helper that will provide us access to the DB */
     PetDbHelper mDbHelper;
+
+    /* SQLiteDatabase variable to be able to read or write to the DB */
+    SQLiteDatabase db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_catalog);
 
-
-         // To access our database, we instantiate our subclass of SQLiteOpenHelper
+        // To access our database, we instantiate our subclass of SQLiteOpenHelper
         // and pass the context, which is the current activity.
         mDbHelper = new PetDbHelper(CatalogActivity.this);
 
@@ -59,7 +63,18 @@ public class CatalogActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+    }
 
+    /**
+     * Dispatch onStart() to all fragments.  Ensure any created loaders are
+     * now started.
+     */
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        // Display the info from the DB after transitioning
+        // from the EditorActivity
         displayDatabaseInfo();
     }
 
@@ -67,13 +82,13 @@ public class CatalogActivity extends AppCompatActivity {
      * Temporary helper method to display information in the onscreen TextView about the state of
      * the pets database.
      */
-    private void displayDatabaseInfo() {
+    public void displayDatabaseInfo() {
         // To access our database, we instantiate our subclass of SQLiteOpenHelper
         // and pass the context, which is the current activity.
-        PetDbHelper mDbHelper = new PetDbHelper(this);
+        mDbHelper = new PetDbHelper(this);
 
         // Create and/or open a database to read from it
-        SQLiteDatabase db = mDbHelper.getReadableDatabase();
+        db = mDbHelper.getReadableDatabase();
 
         // Perform this raw SQL query "SELECT * FROM pets"
         // to get a Cursor that contains all rows from the pets table.
@@ -104,7 +119,7 @@ public class CatalogActivity extends AppCompatActivity {
     private void insertPet()
         {
             // Gets the database in write mode
-            SQLiteDatabase db = mDbHelper.getWritableDatabase();
+            db = mDbHelper.getWritableDatabase();
 
             // Create a ContentValues object where column names are the keys,
             // and Toto's pet attributes are the values.
@@ -113,7 +128,6 @@ public class CatalogActivity extends AppCompatActivity {
             values.put(PetsEntry.COLUMN_PET_BREED, "Terrier");
             values.put(PetsEntry.COLUMN_PET_GENDER, PetsEntry.GENDER_MALE);
             values.put(PetsEntry.COLUMN_PET_WEIGHT, 7);
-
 
             // Insert a new row for Toto in the database, returning the ID of that new row.
             // The first argument for db.insert() is the pets table name.

@@ -31,6 +31,7 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.android.pets.data.PetContract;
 import com.example.android.pets.data.PetContract.PetsEntry;
 import com.example.android.pets.data.PetDbHelper;
 
@@ -44,6 +45,12 @@ public class CatalogActivity extends AppCompatActivity {
 
     /* SQLiteDatabase variable to be able to read or write to the DB */
     SQLiteDatabase db;
+
+    /*  */
+    String selection;
+
+    /*  */
+    String selctionArgs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -90,14 +97,73 @@ public class CatalogActivity extends AppCompatActivity {
         // Create and/or open a database to read from it
         db = mDbHelper.getReadableDatabase();
 
-        // Perform this raw SQL query "SELECT * FROM pets"
-        // to get a Cursor that contains all rows from the pets table.
-        Cursor cursor = db.rawQuery("SELECT * FROM " + PetsEntry.TABLE_PET_NAME, null);
+        String[] projection =
+            {
+                PetsEntry._ID,
+                PetsEntry.COLUMN_PET_NAME,
+                PetsEntry.COLUMN_PET_BREED,
+                PetsEntry.COLUMN_PET_GENDER,
+                PetsEntry.COLUMN_PET_WEIGHT
+            };
+        Cursor cursor = db.query(
+            PetsEntry.TABLE_PET_NAME,
+            projection,
+            null,
+            null,
+            null,
+            null,
+            null
+        );
+
         try {
             // Display the number of rows in the Cursor (which reflects the number of rows in the
             // pets table in the database).
             TextView displayView = (TextView) findViewById(R.id.text_view_pet);
-            displayView.setText("Number of rows in pets database table: " + cursor.getCount());
+            displayView.setText("The pets table contains " + cursor.getCount() + " pets.\n\n");
+
+            // Create a header in the Text View that looks like this:
+            // The pets table contains <number of rows in Cursor> pets.
+            //
+            //              _id - name - breed - gender - weight
+            //
+            // In the while loop below, iterate through the rows of the cursor and display
+            // the information from each column in this order.
+            displayView.append(
+                PetsEntry._ID + " - " + PetsEntry.COLUMN_PET_NAME +
+                " - " + PetsEntry.COLUMN_PET_BREED + " - " + PetsEntry.COLUMN_PET_GENDER +
+                " - " + PetsEntry.COLUMN_PET_WEIGHT + "\n\n"
+            );
+
+            // Figure out the index of each column
+            int idColumnIndex = cursor.getColumnIndex(PetsEntry._ID);
+            int nameColumnIndex = cursor.getColumnIndex(PetsEntry.COLUMN_PET_NAME);
+            int breedColumnIndex = cursor.getColumnIndex(PetsEntry.COLUMN_PET_BREED);
+            int genderColumnIndex = cursor.getColumnIndex(PetsEntry.COLUMN_PET_GENDER);
+            int weightColumnIndex = cursor.getColumnIndex(PetsEntry.COLUMN_PET_WEIGHT);
+            int currentId;
+            String currentName;
+            String currentBreed;
+            int currentGender;
+            int currentWeight;
+
+            // Iterate through all the returned rows in the cursor
+            while (cursor.moveToNext())
+                {
+                    // Use that index to extract the String or Int value of the word
+                    // at the current row the cursor is on.
+                    currentId = cursor.getInt(idColumnIndex);
+                    currentName = cursor.getString(nameColumnIndex);
+                    currentBreed = cursor.getString(breedColumnIndex);
+                    currentGender = cursor.getInt(genderColumnIndex);
+                    currentWeight = cursor.getInt(weightColumnIndex);
+
+                    // Display the values from each column of the current row in the cursor in the TextView
+                    displayView.append((
+                        "\n" + currentId + " - " +
+                        currentName + " - " + currentBreed + " - " +
+                        currentGender + " - " + currentWeight
+                    ));
+                }
         } finally {
             // Always close the cursor when you're done reading from it. This releases all its
             // resources and makes it invalid.

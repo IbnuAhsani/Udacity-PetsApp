@@ -11,6 +11,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 /**
  * Created by test-pc on 03-Mar-18.
@@ -64,6 +65,9 @@ public class PetProvider extends ContentProvider {
      */
     @Override
     public boolean onCreate() {
+
+        // To access our database, we instantiate our subclass of SQLiteOpenHelper
+        // and pass the context, which is the current activity.
         mDbHelper = new PetDbHelper(getContext());
         return true;
     }
@@ -191,6 +195,29 @@ public class PetProvider extends ContentProvider {
     }
 
     /**
+     * Insert a pet into the database with the given content values. Return the new content URI
+     * for that specific row in the database.
+     */
+    private Uri insertPet(Uri uri, ContentValues contentValues)
+        {
+            // Get writable DB
+            SQLiteDatabase db = mDbHelper.getWritableDatabase();
+
+            // Insert the new pet with the given values
+            long newURI = db.insert(PetContract.PetsEntry.TABLE_PET_NAME, null, contentValues);
+
+            // If the ID is -1, then the insertion failed. Log an error and return null.
+            if (newURI == -1)
+                {
+                    Log.e(LOG_TAG, "Failed to insert row for " + uri);
+                    return null;
+                }
+
+            // Return the new URI with the ID (of the newly inserted row) appended at the end
+            return ContentUris.withAppendedId(uri, newURI);
+        }
+
+    /**
      * Implement this to handle requests to insert a new row.
      * As a courtesy, call {@link ContentResolver#notifyChange(Uri, ContentObserver) notifyChange()}
      * after inserting.
@@ -206,7 +233,14 @@ public class PetProvider extends ContentProvider {
     @Nullable
     @Override
     public Uri insert(@NonNull Uri uri, @Nullable ContentValues values) {
-        return null;
+        final int match = sUriMatcher.match(uri);
+        switch (match)
+            {
+                case PETS:
+                    return insertPet(uri, values);
+                default:
+                    throw new IllegalArgumentException("Insertion is not supported for : " + uri);
+            }
     }
 
     /**

@@ -18,6 +18,7 @@ package com.example.android.pets;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
@@ -127,19 +128,17 @@ public class EditorActivity extends AppCompatActivity {
         return true;
     }
 
+    /**
+     * Helper method to insert hardcoded pet data into the database. For debugging purposes only.
+     */
     public void insertPet()
         {
-            // Get pet's name
+            // Read from input fields
+            // Use trim to eliminate leading or trailing white space
             String nameString = mNameEditText.getText().toString().trim();
             String breedString = mBreedEditText.getText().toString().trim();
             String weightString= mWeightEditText.getText().toString().trim();
             Integer weightInt = Integer.parseInt(weightString);
-
-            // Create a DB Helper
-            mDbHelper = new PetDbHelper(EditorActivity.this);
-
-            // Get the DB in Write mode
-            db = mDbHelper.getWritableDatabase();
 
             // Create a ContentValues object where column names are the keys,
             // and pet attributes from the editor are the values.
@@ -149,22 +148,21 @@ public class EditorActivity extends AppCompatActivity {
             values.put(PetsEntry.COLUMN_PET_GENDER, mGender);
             values.put(PetsEntry.COLUMN_PET_WEIGHT, weightInt);
 
-            // Insert a new row for pet in the database, returning the ID of that new row.
-            long newRowId = db.insert(PetsEntry.TABLE_PET_NAME, null, values);
+            // Insert a new pet into the provider, returning the content URI for the new pet.
+            Uri newUri = getContentResolver().insert(PetContract.CONTENT_URI, values);
 
-            Log.v("EditorActivity", "New Row Id: " + newRowId);
+            Log.v("EditorActivity", "New URI: " + newUri.toString());
 
             // Show a toast message depending on whether or not the insertion was successful
-            if(newRowId == -1)
-                {
-                    // If the row ID is -1, then there was an error with insertion.
-                    Toast.makeText(EditorActivity.this, "Error with saving pet", Toast.LENGTH_SHORT).show();
-                }
-            else
-                {
-                    // Otherwise, the insertion was successful and we can display a toast with the row ID
-                    Toast.makeText(EditorActivity.this, "Pet saved with row id " + newRowId, Toast.LENGTH_SHORT).show();
-                }
+            if (newUri == null) {
+                // If the new content URI is null, then there was an error with insertion.
+                Toast.makeText(this, getString(R.string.editor_insert_pet_failed),
+                        Toast.LENGTH_SHORT).show();
+            } else {
+                // Otherwise, the insertion was successful and we can display a toast.
+                Toast.makeText(this, getString(R.string.editor_insert_pet_successful),
+                        Toast.LENGTH_SHORT).show();
+            }
         }
 
     @Override

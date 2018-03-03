@@ -200,6 +200,26 @@ public class PetProvider extends ContentProvider {
      */
     private Uri insertPet(Uri uri, ContentValues contentValues)
         {
+            // Getting the values from the contentValues passed as the input argument
+            // to make sure that none of them are of the incorrect values
+            String name = contentValues.getAsString(PetContract.PetsEntry.COLUMN_PET_NAME);
+            Integer gender = contentValues.getAsInteger(PetContract.PetsEntry.COLUMN_PET_GENDER);
+            Integer weight = contentValues.getAsInteger(PetContract.PetsEntry.COLUMN_PET_WEIGHT);
+
+            // Checking one by one if the input values are incorrect
+            if(name == null)
+                {
+                    throw new IllegalArgumentException("Pet requires a name");
+                }
+            if (gender == null || !PetContract.PetsEntry.isValidGender(gender))
+                {
+                    throw new IllegalArgumentException("Pet requires valid gender");
+                }
+            if (weight != null && weight <= 0)
+                {
+                    throw new IllegalArgumentException("Please input the breed of the pet");
+                }
+
             // Get writable DB
             SQLiteDatabase db = mDbHelper.getWritableDatabase();
 

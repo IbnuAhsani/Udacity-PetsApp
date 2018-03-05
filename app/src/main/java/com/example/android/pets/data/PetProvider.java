@@ -25,16 +25,34 @@ public class PetProvider extends ContentProvider {
     /* Tag for the Log Message */
     public static final String LOG_TAG = PetProvider.class.getSimpleName();
 
-    /* URI codes for matching predefined URIs to the URI that's used for Querying */
+    /** URI matcher code for the content URI for the pets table */
     private static final int PETS = 100;
+
+    /** URI matcher code for the content URI for a single pet in the pets table */
     private static final int PETS_ID = 101;
 
     /* The variable that's used when matching predefined URIs to Querying URIs */
     private static final UriMatcher sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
 
+    // Static initializer. This is run the first time anything is called from this class.
     static
         {
+            // The calls to addURI() go here, for all of the content URI patterns that the provider
+            // should recognize. All paths added to the UriMatcher have a corresponding code to return
+            // when a match is found.
+
+            // The content URI of the form "content://com.example.android.pets/pets" will map to the
+            // integer code {@link #PETS}. This URI is used to provide access to MULTIPLE rows
+            // of the pets table.
             sUriMatcher.addURI(PetContract.CONTENT_AUTHORITY, PetContract.PATH_PETS, PETS);
+
+            // The content URI of the form "content://com.example.android.pets/pets/#" will map to the
+            // integer code {@link #PET_ID}. This URI is used to provide access to ONE single row
+            // of the pets table.
+            //
+            // In this case, the "#" wildcard is used where "#" can be substituted for an integer.
+            // For example, "content://com.example.android.pets/pets/3" matches, but
+            // "content://com.example.android.pets/pets" (without a number at the end) doesn't match.
             sUriMatcher.addURI(PetContract.CONTENT_AUTHORITY, PetContract.PATH_PETS + "/#", PETS_ID);
         }
 
@@ -141,6 +159,9 @@ public class PetProvider extends ContentProvider {
         int match = sUriMatcher.match(uri);
         switch (match)
             {
+                // For the PETS code, query the pets table directly with the given
+                // projection, selection, selection arguments, and sort order. The cursor
+                // could contain multiple rows of the pets table.
                 case PETS:
                         cursor = db.query(
                             PetContract.PetsEntry.TABLE_PET_NAME,
@@ -152,9 +173,19 @@ public class PetProvider extends ContentProvider {
                             sortOrder);
                         break;
                 case PETS_ID:
+                    // For the PET_ID code, extract out the ID from the URI.
+                    // For an example URI such as "content://com.example.android.pets/pets/3",
+                    // the selection will be "_id=?" and the selection argument will be a
+                    // String array containing the actual ID of 3 in this case.
+                    //
+                    // For every "?" in the selection, we need to have an element in the selection
+                    // arguments that will fill in the "?". Since we have 1 question mark in the
+                    // selection, we have 1 String in the selection arguments' String array.
                     selection = PetContract.PetsEntry._ID + "=?";
                     selectionArgs = new String[] {String.valueOf(ContentUris.parseId(uri))};
 
+                    // This will perform a query on the pets table where the _id equals 3 to return a
+                    // Cursor containing that row of the table.
                     cursor = db.query(
                         PetContract.PetsEntry.TABLE_PET_NAME,
                         projection,
@@ -191,7 +222,17 @@ public class PetProvider extends ContentProvider {
     @Nullable
     @Override
     public String getType(@NonNull Uri uri) {
-        return null;
+
+        final int match = sUriMatcher.match(uri);
+        switch (match)
+            {
+                case PETS:
+                    return PetContract.PetsEntry.CONTENT_LIST_TYPE;
+                case PETS_ID:
+                    return PetContract.PetsEntry.CONTENT_ITEM_TYPE;
+                default:
+                    throw new IllegalStateException("Unknown URI " + uri + " with match " + match);
+            }
     }
 
     /**
@@ -219,6 +260,8 @@ public class PetProvider extends ContentProvider {
                 {
                     throw new IllegalArgumentException("Please input the breed of the pet");
                 }
+
+            // No need to check the breed, any value is valid (including null).
 
             // Get writable DB
             SQLiteDatabase db = mDbHelper.getWritableDatabase();
@@ -314,6 +357,7 @@ public class PetProvider extends ContentProvider {
                 {
                     return 0;
                 }
+
             // If the {@link PetEntry#COLUMN_PET_NAME} key is present,
             // check that the name value is not null.
             if (values.containsKey(PetContract.PetsEntry.COLUMN_PET_NAME))

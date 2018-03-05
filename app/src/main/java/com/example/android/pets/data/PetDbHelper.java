@@ -10,6 +10,9 @@ import com.example.android.pets.data.PetContract.PetsEntry;
  * Created by test-pc on 28-Feb-18.
  */
 
+/**
+ * Database helper for Pets app. Manages database creation and version management.
+ */
 public class PetDbHelper extends SQLiteOpenHelper {
 
     /* Defining the name of the DB */
@@ -68,8 +71,11 @@ public class PetDbHelper extends SQLiteOpenHelper {
      * @param oldVersion The old database version.
      * @param newVersion The new database version.
      */
+    /**
+     * This is called when the database needs to be upgraded.
+     */
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-
+        // The database is still at version 1, so there's nothing to do be done here.
     }
 }

@@ -149,7 +149,7 @@ public class EditorActivity extends AppCompatActivity {
             values.put(PetsEntry.COLUMN_PET_WEIGHT, weightInt);
 
             // Insert a new pet into the provider, returning the content URI for the new pet.
-            Uri newUri = getContentResolver().insert(PetContract.CONTENT_URI, values);
+            Uri newUri = getContentResolver().insert(PetContract.PetsEntry.CONTENT_URI, values);
 
             Log.v("EditorActivity", "New URI: " + newUri.toString());
 

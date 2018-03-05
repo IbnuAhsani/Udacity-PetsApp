@@ -239,8 +239,6 @@ public class PetProvider extends ContentProvider {
 
     /**
      * Implement this to handle requests to insert a new row.
-     * As a courtesy, call {@link ContentResolver#notifyChange(Uri, ContentObserver) notifyChange()}
-     * after inserting.
      * This method can be called from multiple threads, as described in
      * <a href="{@docRoot}guide/topics/fundamentals/processes-and-threads.html#Threads">Processes
      * and Threads</a>.
@@ -267,8 +265,6 @@ public class PetProvider extends ContentProvider {
      * Implement this to handle requests to delete one or more rows.
      * The implementation should apply the selection clause when performing
      * deletion, allowing the operation to affect multiple rows in a directory.
-     * As a courtesy, call {@link ContentResolver#notifyChange(Uri, ContentObserver) notifyChange()}
-     * after deleting.
      * This method can be called from multiple threads, as described in
      * <a href="{@docRoot}guide/topics/fundamentals/processes-and-threads.html#Threads">Processes
      * and Threads</a>.
@@ -282,7 +278,6 @@ public class PetProvider extends ContentProvider {
      * @param selection     An optional restriction to apply to rows when deleting.
      * @param selectionArgs
      * @return The number of rows affected.
-     * @throws SQLException
      */
     @Override
     public int delete(@NonNull Uri uri, @Nullable String selection, @Nullable String[] selectionArgs) {
@@ -290,11 +285,65 @@ public class PetProvider extends ContentProvider {
     }
 
     /**
+     * Update pets in the database with the given content values. Apply the changes to the rows
+     * specified in the selection and selection arguments (which could be 0 or 1 or more pets).
+     * Return the number of rows that were successfully updated.
+     */
+    private int updatePet(Uri uri, ContentValues values, String selection, String[] selectionArgs)
+        {
+            // If there are no values to update, then don't try to update the database
+            if (values.size() == 0)
+                {
+                    return 0;
+                }
+            // If the {@link PetEntry#COLUMN_PET_NAME} key is present,
+            // check that the name value is not null.
+            if (values.containsKey(PetContract.PetsEntry.COLUMN_PET_NAME))
+                {
+                    String name = values.getAsString(PetContract.PetsEntry.COLUMN_PET_NAME);
+
+                    // Checking one by one if the input values are incorrect
+                    if(name == null)
+                        {
+                            throw new IllegalArgumentException("Pet requires a name");
+                        }
+                }
+
+            // If the {@link PetEntry#COLUMN_PET_GENDER} key is present,
+            // check that the gender value is valid.
+            if(values.containsKey(PetContract.PetsEntry.COLUMN_PET_GENDER))
+                {
+                    Integer gender = values.getAsInteger(PetContract.PetsEntry.COLUMN_PET_GENDER);
+
+                    if (gender == null || !PetContract.PetsEntry.isValidGender(gender))
+                        {
+                            throw new IllegalArgumentException("Pet requires valid gender");
+                        }
+                }
+
+            // If the {@link PetEntry#COLUMN_PET_WEIGHT} key is present,
+            // check that the weight value is valid.
+            if(values.containsKey(PetContract.PetsEntry.COLUMN_PET_WEIGHT))
+                {
+                    Integer weight = values.getAsInteger(PetContract.PetsEntry.COLUMN_PET_WEIGHT);
+
+                    if (weight != null && weight <= 0)
+                        {
+                            throw new IllegalArgumentException("Please input the breed of the pet");
+                        }
+                }
+
+            // Otherwise, get writeable database to update the data
+            SQLiteDatabase db = mDbHelper.getWritableDatabase();
+
+            // Returns the number of database rows affected by the update statement
+            return db.update(PetContract.PetsEntry.TABLE_PET_NAME, values, selection, selectionArgs);
+        }
+
+    /**
      * Implement this to handle requests to update one or more rows.
      * The implementation should update all rows matching the selection
      * to set the columns according to the provided values map.
-     * As a courtesy, call {@link ContentResolver#notifyChange(Uri, ContentObserver) notifyChange()}
-     * after updating.
      * This method can be called from multiple threads, as described in
      * <a href="{@docRoot}guide/topics/fundamentals/processes-and-threads.html#Threads">Processes
      * and Threads</a>.
@@ -309,6 +358,21 @@ public class PetProvider extends ContentProvider {
      */
     @Override
     public int update(@NonNull Uri uri, @Nullable ContentValues values, @Nullable String selection, @Nullable String[] selectionArgs) {
-        return 0;
+
+        final int match = sUriMatcher.match(uri);
+        switch (match)
+            {
+                case PETS:
+                    return update(uri, values, selection, selectionArgs);
+                case PETS_ID:
+                    // For the PET_ID code, extract out the ID from the URI,
+                    // so we know which row to update. Selection will be "_id=?" and selection
+                    // arguments will be a String array containing the actual ID
+                    selection = PetContract.PetsEntry._ID + "=?";
+                    selectionArgs = new String[] {String.valueOf(ContentUris.parseId(uri))};
+                    return updatePet(uri, values, selection, selectionArgs);
+                default:
+                    throw new IllegalArgumentException("Update is not supported for " + uri);
+            }
     }
 }

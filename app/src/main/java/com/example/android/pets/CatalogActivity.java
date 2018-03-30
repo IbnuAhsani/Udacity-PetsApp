@@ -170,7 +170,7 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        
+
         // Update {@link PetCursorAdapter} with this new cursor containing updated pet data
         mCursorAdapter.changeCursor(data);
 

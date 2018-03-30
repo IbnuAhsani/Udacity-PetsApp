@@ -29,6 +29,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -109,61 +110,15 @@ public class CatalogActivity extends AppCompatActivity {
                             null,
                             null);
 
-        try
-            {
-                // Display the number of rows in the Cursor (which reflects the number of rows in the
-                // pets table in the database).
-                TextView displayView = (TextView) findViewById(R.id.text_view_pet);
-                displayView.setText("The pets table contains " + cursor.getCount() + " pets.\n\n");
+        // Find the ListView which will be populated with the pet data
+        ListView petList = (ListView) findViewById(R.id.pet_list_view);
 
-                // Create a header in the Text View that looks like this:
-                // The pets table contains <number of rows in Cursor> pets.
-                //
-                //              _id - name - breed - gender - weight
-                //
-                // In the while loop below, iterate through the rows of the cursor and display
-                // the information from each column in this order.
-                displayView.append(
-                    PetsEntry._ID + " - " + PetsEntry.COLUMN_PET_NAME +
-                    " - " + PetsEntry.COLUMN_PET_BREED + " - " + PetsEntry.COLUMN_PET_GENDER +
-                    " - " + PetsEntry.COLUMN_PET_WEIGHT + "\n\n"
-                );
+        // Setup an Adapter to create a list item for each row of pet data in the Cursor
+        PetCursorAdapter petCursorAdapter = new PetCursorAdapter(this, cursor);
 
-                // Figure out the index of each column
-                int idColumnIndex = cursor.getColumnIndex(PetsEntry._ID);
-                int nameColumnIndex = cursor.getColumnIndex(PetsEntry.COLUMN_PET_NAME);
-                int breedColumnIndex = cursor.getColumnIndex(PetsEntry.COLUMN_PET_BREED);
-                int genderColumnIndex = cursor.getColumnIndex(PetsEntry.COLUMN_PET_GENDER);
-                int weightColumnIndex = cursor.getColumnIndex(PetsEntry.COLUMN_PET_WEIGHT);
-                int currentId;
-                String currentName;
-                String currentBreed;
-                int currentGender;
-                int currentWeight;
+        // Attach the Adapter to the ListView
+        petList.setAdapter(petCursorAdapter);
 
-                // Iterate through all the returned rows in the cursor
-                while (cursor.moveToNext())
-                    {
-                        // Use that index to extract the String or Int value of the word
-                        // at the current row the cursor is on.
-                        currentId = cursor.getInt(idColumnIndex);
-                        currentName = cursor.getString(nameColumnIndex);
-                        currentBreed = cursor.getString(breedColumnIndex);
-                        currentGender = cursor.getInt(genderColumnIndex);
-                        currentWeight = cursor.getInt(weightColumnIndex);
-
-                        // Display the values from each column of the current row in the cursor in the TextView
-                        displayView.append((
-                            "\n" + currentId + " - " +
-                            currentName + " - " + currentBreed + " - " +
-                            currentGender + " - " + currentWeight
-                        ));
-                }
-        } finally {
-            // Always close the cursor when you're done reading from it. This releases all its
-            // resources and makes it invalid.
-            cursor.close();
-        }
     }
 
     @Override
@@ -180,7 +135,7 @@ public class CatalogActivity extends AppCompatActivity {
     private void insertPet()
         {
             // Gets the database in write mode
-            db = mDbHelper.getWritableDatabase();
+            // db = mDbHelper.getWritableDatabase();
 
             // Create a ContentValues object where column names are the keys,
             // and Toto's pet attributes are the values.
